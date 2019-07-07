@@ -6,7 +6,7 @@ from pynput import mouse
 
 RECORD_STATUS = False
 REPLAY_STATUS = False
-
+pyautogui.FAILSAFE = False
 #========MOUSE MOVEMENT RECORD============
 def writeData(string):
     f = open("datapoints.txt","a")
@@ -14,7 +14,7 @@ def writeData(string):
     f.close()
 def on_move(x, y):
     global RECORD_STATUS
-    data = '{0}\n'.format((x, y))
+    data = '{0} {1}\n'.format(x, y)
     print(data)
     writeData(data)
     if RECORD_STATUS == False:
@@ -22,7 +22,7 @@ def on_move(x, y):
 def on_click(x, y, button, pressed):
     global RECORD_STATUS
     if(pressed == True):
-        data = '{0} {1} {2}'.format(button, pressed ,(x, y))
+        data = '{0} {1} {2}\n'.format(button,x, y)
         print(data)
         writeData(data)
     if RECORD_STATUS == False:
@@ -39,9 +39,17 @@ def replayMovements():
     with open('datapoints.txt', 'r') as f:
         while REPLAY_STATUS:
             line = f.readline()
-            if not line:
+            if not line:#EOF move to top of datapoints
                 f.seek(0)
-            print(line)
+                line = f.readline()
+            data = line.split()
+            if len(data) == 2:
+                pyautogui.moveTo(int(data[0]),int(data[1]))
+            elif len(data) == 3:
+                data[0] = data[0].split('.')[1]
+                pyautogui.click(button = data[0],x = int(data[1]), y = int(data[2]))
+            else:
+                print("invalid datapoint format")
     return 0
 #=========================================
 
