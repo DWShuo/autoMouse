@@ -6,33 +6,44 @@ from pynput import mouse
 
 RECORD_STATUS = False
 REPLAY_STATUS = False
+
 #========MOUSE MOVEMENT RECORD============
+def writeData(string):
+    f = open("datapoints.txt","a")
+    f.write(string)
+    f.close()
 def on_move(x, y):
     global RECORD_STATUS
-    print('Pointer moved to {0}'.format(
-        (x, y)))
+    data = '{0}\n'.format((x, y))
+    print(data)
+    writeData(data)
     if RECORD_STATUS == False:
         return False
 def on_click(x, y, button, pressed):
     global RECORD_STATUS
-    print('{0} at {1}'.format(
-        'Pressed' if pressed else 'Released',
-        (x, y)))
+    if(pressed == True):
+        data = '{0} {1} {2}'.format(button, pressed ,(x, y))
+        print(data)
+        writeData(data)
     if RECORD_STATUS == False:
         return False
 def recordMovements():
+    open('datapoints.txt', 'w').close()#clear the file for new datapoints
     with mouse.Listener( on_move=on_move, on_click=on_click) as listener:
         listener.join()
-#========MOUSE MOVEMENT RECORD============
+#=========================================
 
 #========MOUSE MOVEMENT REPLAY============
 def replayMovements():
     global REPLAY_STATUS
-    while(REPLAY_STATUS):
-        print("Replaying movements")
-        time.sleep(1)
+    with open('datapoints.txt', 'r') as f:
+        while REPLAY_STATUS:
+            line = f.readline()
+            if not line:
+                f.seek(0)
+            print(line)
     return 0
-#========MOUSE MOVEMENT REPLAY============
+#=========================================
 
 #========HOTKEY COMMAND LISTEN============
 def on_press(key):
@@ -40,7 +51,6 @@ def on_press(key):
     global REPLAY_STATUS
     record = threading.Thread(target = recordMovements)
     replay = threading.Thread(target = replayMovements)
-    
     if key == keyboard.Key.f5 and RECORD_STATUS == False:
         RECORD_STATUS = True
         record.start()
@@ -51,7 +61,7 @@ def on_press(key):
         replay.start()
     elif key == keyboard.Key.f6 and REPLAY_STATUS == True:
         REPLAY_STATUS = False
-#========HOTKEY COMMAND LISTEN============
+#=========================================
 
 if __name__ == "__main__":
     # Collect events until released
